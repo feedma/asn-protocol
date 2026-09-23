@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@fef00d40025f7fd8f1ec759cbbb0f577ddfc3133 # 1.94.0
+        with:
+          components: clippy,rustfmt
+      - run: cargo fmt --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace --locked
+      - run: cargo run -p asn-conformance --locked --quiet
+      - name: Check SemVer against main
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          if git cat-file -e origin/main:Cargo.toml 2>/dev/null; then
+            cargo install cargo-semver-checks --locked
+            cargo semver-checks check-release --baseline-rev origin/main
+          else
+            echo "Initial protocol release has no SemVer baseline"
+          fi

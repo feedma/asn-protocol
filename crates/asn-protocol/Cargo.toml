@@ -1,0 +1,17 @@
+[package]
+name = "asn-protocol"
+description = "Transport-neutral ASN envelopes, canonical JSON, identity verification and signer contracts"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+base64.workspace = true
+p256.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_jcs.workspace = true
+sha2.workspace = true
+thiserror.workspace = true

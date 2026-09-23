@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://asn.dev/schemas/worker-envelope-v1.schema.json",
+  "title": "ASN worker message envelope version 1",
+  "type": "object",
+  "required": [
+    "version",
+    "type",
+    "messageId",
+    "sequence",
+    "sentAt",
+    "correlationId",
+    "body",
+    "proof"
+  ],
+  "properties": {
+    "version": { "const": "1" },
+    "type": { "type": "string", "minLength": 1 },
+    "messageId": { "type": "string", "minLength": 1 },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "sentAt": { "type": "string", "format": "date-time" },
+    "correlationId": { "type": ["string", "null"] },
+    "body": {},
+    "proof": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}
