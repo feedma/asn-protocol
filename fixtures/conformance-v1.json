@@ -37,6 +37,8 @@
       "name": "valid ES256 WorkerSessionProof",
       "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImRpZDp3ZWI6d29ya2VyLmV4YW1wbGUja2V5LTEiLCJ0eXAiOiJhc24td29ya2VyK2p3cyJ9.eyJub25jZSI6ImFiYyIsInR5cGUiOiJXb3JrZXJTZXNzaW9uUHJvb2YiLCJ2ZXJzaW9uIjoiMSIsIndvcmtlcklkIjoid29ya2VyXzAxIn0.bBzeBAZ76s73ftgkVG6TkOgV5h-uK8QzZAf5utGfH8SArJlzPtEHnxvhpg6z33HDzQzwJBgNoWY-D8JRNfuR9g",
       "keyId": "did:web:worker.example#key-1",
+      "keyActive": true,
+      "expectedThumbprint": "gWjt7nmB1udyFpLYVp0SxJnI8lJEvl7q8AFYZRqnGV8",
       "publicKeyJwk": {
         "kty": "EC",
         "crv": "P-256",
@@ -55,6 +57,8 @@
       "name": "modified signature",
       "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImRpZDp3ZWI6d29ya2VyLmV4YW1wbGUja2V5LTEiLCJ0eXAiOiJhc24td29ya2VyK2p3cyJ9.eyJub25jZSI6ImFiYyIsInR5cGUiOiJXb3JrZXJTZXNzaW9uUHJvb2YiLCJ2ZXJzaW9uIjoiMSIsIndvcmtlcklkIjoid29ya2VyXzAxIn0.bBzeBAZ76s73ftgkVG6TkOgV5h-uK8QzZAf5utGfH8SArJlzPtEHnxvhpg6z33HDzQzwJBgNoWY-D8JRNfuR9A",
       "keyId": "did:web:worker.example#key-1",
+      "keyActive": true,
+      "expectedThumbprint": "gWjt7nmB1udyFpLYVp0SxJnI8lJEvl7q8AFYZRqnGV8",
       "publicKeyJwk": {
         "kty": "EC",
         "crv": "P-256",
@@ -68,6 +72,23 @@
       "name": "wrong key identifier",
       "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImRpZDp3ZWI6d29ya2VyLmV4YW1wbGUja2V5LTEiLCJ0eXAiOiJhc24td29ya2VyK2p3cyJ9.eyJub25jZSI6ImFiYyIsInR5cGUiOiJXb3JrZXJTZXNzaW9uUHJvb2YiLCJ2ZXJzaW9uIjoiMSIsIndvcmtlcklkIjoid29ya2VyXzAxIn0.bBzeBAZ76s73ftgkVG6TkOgV5h-uK8QzZAf5utGfH8SArJlzPtEHnxvhpg6z33HDzQzwJBgNoWY-D8JRNfuR9g",
       "keyId": "did:web:worker.example#retired",
+      "keyActive": true,
+      "expectedThumbprint": "gWjt7nmB1udyFpLYVp0SxJnI8lJEvl7q8AFYZRqnGV8",
+      "publicKeyJwk": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "HhhTL9R1TALzBB2cdc6zO4P_2BrHzk_ogsyxyYvFiW4",
+        "y": "pGwxHE4v9A3ZajZT5uRURdMt_khuztdcepDGoYiBwKM"
+      },
+      "valid": false,
+      "payload": null
+    },
+    {
+      "name": "inactive matching key",
+      "compact": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImRpZDp3ZWI6d29ya2VyLmV4YW1wbGUja2V5LTEiLCJ0eXAiOiJhc24td29ya2VyK2p3cyJ9.eyJub25jZSI6ImFiYyIsInR5cGUiOiJXb3JrZXJTZXNzaW9uUHJvb2YiLCJ2ZXJzaW9uIjoiMSIsIndvcmtlcklkIjoid29ya2VyXzAxIn0.bBzeBAZ76s73ftgkVG6TkOgV5h-uK8QzZAf5utGfH8SArJlzPtEHnxvhpg6z33HDzQzwJBgNoWY-D8JRNfuR9g",
+      "keyId": "did:web:worker.example#key-1",
+      "keyActive": false,
+      "expectedThumbprint": "gWjt7nmB1udyFpLYVp0SxJnI8lJEvl7q8AFYZRqnGV8",
       "publicKeyJwk": {
         "kty": "EC",
         "crv": "P-256",

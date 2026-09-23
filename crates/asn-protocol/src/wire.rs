@@ -67,7 +67,10 @@ impl Envelope {
     }
 
     pub fn to_canonical_vec(&self) -> Result<Vec<u8>, EnvelopeError> {
-        parse_major(&self.version)?;
+        let major = parse_major(&self.version)?;
+        if major != SUPPORTED_PROTOCOL_MAJOR {
+            return Err(EnvelopeError::UnsupportedMajor(major));
+        }
         if self.sequence > MAX_SAFE_JSON_INTEGER {
             return Err(EnvelopeError::InvalidSequence);
         }

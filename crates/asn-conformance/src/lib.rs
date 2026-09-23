@@ -33,6 +33,8 @@ struct JwsVector {
     compact: String,
     key_id: String,
     public_key_jwk: PublicJwk,
+    key_active: bool,
+    expected_thumbprint: String,
     valid: bool,
     payload: Option<Value>,
 }
@@ -74,7 +76,11 @@ pub fn run_file(path: impl AsRef<Path>) -> Result<usize, Box<dyn Error>> {
         let key = VerificationKey {
             key_id: vector.key_id,
             jwk: vector.public_key_jwk,
+            active: vector.key_active,
         };
+        if key.jwk.thumbprint()? != vector.expected_thumbprint {
+            return Err(format!("JWS thumbprint failed: {}", vector.name).into());
+        }
         let result = verify_compact_jws(&vector.compact, &key);
         match (vector.valid, result, vector.payload) {
             (true, Ok(actual), Some(expected)) if actual.payload == expected => {}

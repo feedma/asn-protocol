@@ -71,6 +71,17 @@ fn envelope_sequence_must_be_an_interoperable_json_integer() {
     );
 }
 
+#[test]
+fn unsupported_envelope_cannot_be_serialized_for_transport() {
+    let input = br#"{"version":"1","type":"ack","messageId":"msg_01","sequence":1,"sentAt":"2026-09-22T12:02:00Z","correlationId":null,"body":{},"proof":null}"#;
+    let mut envelope = Envelope::from_slice(input).unwrap();
+    envelope.version = "2".into();
+    assert_eq!(
+        envelope.to_canonical_vec().unwrap_err(),
+        EnvelopeError::UnsupportedMajor(2)
+    );
+}
+
 struct TestSigner {
     key: SigningKey,
     key_id: String,
@@ -108,7 +119,17 @@ fn verification_key(signer: &TestSigner) -> VerificationKey {
             x: URL_SAFE_NO_PAD.encode(point.x().unwrap()),
             y: URL_SAFE_NO_PAD.encode(point.y().unwrap()),
         },
+        active: true,
     }
+}
+
+#[test]
+fn inactive_key_is_rejected_before_signature_acceptance() {
+    let signer = test_signer();
+    let compact = build_compact_jws(&json!({"version": "1"}), &signer).unwrap();
+    let mut key = verification_key(&signer);
+    key.active = false;
+    assert!(verify_compact_jws(&compact, &key).is_err());
 }
 
 #[test]

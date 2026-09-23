@@ -13,8 +13,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.94.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@fef00d40025f7fd8f1ec759cbbb0f577ddfc3133 # 1.94.0
       - name: Require GitHub-verified signed annotated tag
         env:
           GH_TOKEN: ${{ github.token }}
@@ -22,9 +22,14 @@ jobs:
         run: |
           tag_object=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GITHUB_REF_NAME}" --jq '.object.sha')
           test "$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object}" --jq '.verification.verified')" = true
+      - name: Match tag to crate SemVer
+        shell: bash
+        run: |
+          crate_version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "asn-protocol") | .version')
+          test "${GITHUB_REF_NAME}" = "v${crate_version}"
       - run: cargo test --workspace --locked
       - run: cargo package -p asn-protocol --locked
-      - uses: actions/attest-build-provenance@v3
+      - uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
         with:
           subject-path: target/package/asn-protocol-*.crate
       - name: Publish crate

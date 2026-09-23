@@ -7,6 +7,7 @@ use p256::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use sha2::{Digest as _, Sha256};
 use thiserror::Error;
 
 use crate::{canonical::canonicalize, signers::JwsSigner};
@@ -28,6 +29,8 @@ pub struct PublicJwk {
 pub struct VerificationKey {
     pub key_id: String,
     pub jwk: PublicJwk,
+    /// Set by the caller's key-resolution layer after checking current status.
+    pub active: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -109,6 +112,9 @@ pub fn verify_compact_jws(
     if header.kid != expected_key.key_id {
         return Err(JwsError::UnknownKey);
     }
+    if !expected_key.active {
+        return Err(JwsError::UnknownKey);
+    }
 
     let payload_bytes = decode_segment(segments[1])?;
     let canonical = canonicalize(&payload_bytes)
@@ -135,6 +141,21 @@ pub fn verify_compact_jws(
         canonical_payload: payload_bytes,
         payload,
     })
+}
+
+impl PublicJwk {
+    pub fn thumbprint(&self) -> Result<String, JwsError> {
+        // Validation also rejects non-P-256 coordinates before identifying a key.
+        verifying_key(self)?;
+        let members = serde_json::json!({
+            "crv": self.crv,
+            "kty": self.kty,
+            "x": self.x,
+            "y": self.y,
+        });
+        let canonical = serde_jcs::to_vec(&members)?;
+        Ok(URL_SAFE_NO_PAD.encode(Sha256::digest(canonical)))
+    }
 }
 
 fn decode_segment(segment: &str) -> Result<Vec<u8>, JwsError> {
