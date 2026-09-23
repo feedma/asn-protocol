@@ -30,4 +30,4 @@ an unsupported major explicitly.
 
 Crate releases follow SemVer. Consumers should pin a released version and its
 resolved commit or lockfile. The release workflow accepts only signed annotated
-tags and publishes the `asn-protocol` crate plus provenance for its package.
+tags and publishes the crate and GitHub release from the exact tagged revision.
