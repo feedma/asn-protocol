@@ -3,6 +3,7 @@ use std::{error::Error, fs, path::Path};
 use asn_protocol::{
     canonical::canonicalize,
     identity::{PublicJwk, VerificationKey, verify_compact_jws},
+    service::ServiceContract,
     wire::Envelope,
 };
 use serde::Deserialize;
@@ -14,6 +15,7 @@ struct Vectors {
     version: String,
     canonicalization: Vec<CanonicalizationVector>,
     envelopes: Vec<EnvelopeVector>,
+    service_contracts: Vec<ServiceContractVector>,
     jws: Vec<JwsVector>,
 }
 
@@ -47,6 +49,15 @@ struct EnvelopeVector {
     valid: bool,
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ServiceContractVector {
+    name: String,
+    input: String,
+    valid: bool,
+    contract_hash: Option<String>,
+}
+
 pub fn run_file(path: impl AsRef<Path>) -> Result<usize, Box<dyn Error>> {
     let vectors: Vectors = serde_json::from_slice(&fs::read(path)?)?;
     if vectors.version != "1" {
@@ -68,6 +79,19 @@ pub fn run_file(path: impl AsRef<Path>) -> Result<usize, Box<dyn Error>> {
         let result = Envelope::from_slice(vector.input.as_bytes());
         if result.is_ok() != vector.valid {
             return Err(format!("envelope vector failed: {}", vector.name).into());
+        }
+        checked += 1;
+    }
+
+    for vector in vectors.service_contracts {
+        let result = ServiceContract::from_slice(vector.input.as_bytes())
+            .and_then(|contract| contract.contract_hash());
+        match (vector.valid, result, vector.contract_hash) {
+            (true, Ok(actual), Some(expected)) if actual == expected => {}
+            (false, Err(_), None) => {}
+            _ => {
+                return Err(format!("service contract vector failed: {}", vector.name).into());
+            }
         }
         checked += 1;
     }
