@@ -9,6 +9,10 @@ initial `0.1.0-alpha.1` release provides:
 - separate seams for ASN JWS, EIP-712, credential-holder and data-key signers;
 - language-neutral schemas and reusable valid/invalid conformance vectors.
 
+The next `0.2.0-alpha.1` release adds provider-defined, versioned service
+contracts with inline JSON Schemas, RFC 8785/SHA-256 contract bindings and
+worker support assertions that reference an exact contract hash.
+
 Run every check from the repository root:
 
 ```bash

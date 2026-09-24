@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://asn.dev/schemas/worker-service-support-v1.schema.json",
+  "title": "ASN worker service support binding version 1",
+  "type": "object",
+  "required": ["serviceId", "serviceVersion", "contractHash"],
+  "properties": {
+    "serviceId": {
+      "type": "string",
+      "pattern": "^[a-z0-9._/-]{1,128}$"
+    },
+    "serviceVersion": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._+-]{1,64}$"
+    },
+    "contractHash": {
+      "type": "string",
+      "pattern": "^urn:sha256:[A-Za-z0-9_-]{43}$"
+    }
+  },
+  "additionalProperties": false
+}

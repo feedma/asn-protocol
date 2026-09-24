@@ -32,6 +32,20 @@
       "valid": false
     }
   ],
+  "serviceContracts": [
+    {
+      "name": "versioned GeoJSON rendering contract",
+      "input": "{\"operations\":[{\"paymentProtocols\":[\"x402\"],\"authorizationProtocols\":[\"ap2\"],\"output\":{\"maxBytes\":20971520,\"mediaTypes\":[\"application/json\"],\"schema\":{\"required\":[\"image\"],\"type\":\"object\"}},\"input\":{\"maxBytes\":10485760,\"mediaTypes\":[\"application/json\"],\"schema\":{\"required\":[\"geojson\"],\"type\":\"object\",\"$schema\":\"https://json-schema.org/draft/2020-12/schema\"}},\"executionModes\":[\"async\"],\"description\":\"Render one GeoJSON document\",\"id\":\"geography.render\"}],\"description\":\"Renders geographic data as an image\",\"name\":\"GeoJSON rendering\",\"serviceVersion\":\"1.0.0\",\"serviceId\":\"geojson-rendering\",\"contractVersion\":\"1\"}",
+      "valid": true,
+      "contractHash": "urn:sha256:dAL7LqUGJyt53mKyPMXrf8OlooGKSdsPj2_sqodCUFs"
+    },
+    {
+      "name": "ambiguous duplicate service identifier",
+      "input": "{\"contractVersion\":\"1\",\"serviceId\":\"one\",\"serviceId\":\"two\",\"serviceVersion\":\"1.0.0\",\"name\":\"Duplicate\",\"description\":\"Duplicate identifier\",\"operations\":[]}",
+      "valid": false,
+      "contractHash": null
+    }
+  ],
   "jws": [
     {
       "name": "valid ES256 WorkerSessionProof",
