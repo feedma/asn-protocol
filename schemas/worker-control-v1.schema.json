@@ -7,6 +7,7 @@
     { "$ref": "#/$defs/enrollmentChallenge" },
     { "$ref": "#/$defs/enrollmentProof" },
     { "$ref": "#/$defs/workerDelegation" },
+    { "$ref": "#/$defs/revocationAuthorityDelegation" },
     { "$ref": "#/$defs/sessionHello" },
     { "$ref": "#/$defs/sessionChallenge" },
     { "$ref": "#/$defs/sessionProof" },
@@ -160,6 +161,26 @@
       },
       "additionalProperties": false
     },
+    "revocationAuthorityDelegation": {
+      "type": "object",
+      "required": ["type", "version", "delegationId", "providerId", "authorityDid", "authorityKeyId", "workerDid", "workerDelegationId", "revocationId", "environment", "notBefore", "expiresAt", "maxLeaseSeconds"],
+      "properties": {
+        "type": { "const": "RevocationAuthorityDelegation" },
+        "version": { "const": "1" },
+        "delegationId": { "$ref": "#/$defs/token" },
+        "providerId": { "$ref": "#/$defs/didWeb" },
+        "authorityDid": { "$ref": "#/$defs/didWeb" },
+        "authorityKeyId": { "$ref": "#/$defs/token" },
+        "workerDid": { "$ref": "#/$defs/didWeb" },
+        "workerDelegationId": { "$ref": "#/$defs/token" },
+        "revocationId": { "$ref": "#/$defs/token" },
+        "environment": { "$ref": "#/$defs/token" },
+        "notBefore": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "maxLeaseSeconds": { "type": "integer", "minimum": 1, "maximum": 300 }
+      },
+      "additionalProperties": false
+    },
     "sessionHello": {
       "type": "object",
       "required": ["workerId", "credential", "supportedProtocolVersions", "cursors"],
@@ -233,14 +254,16 @@
     },
     "revocationLease": {
       "type": "object",
-      "required": ["type", "version", "issuer", "providerId", "workerId", "delegationId", "revocationId", "environment", "status", "issuedAt", "expiresAt"],
+      "required": ["type", "version", "issuer", "providerId", "workerId", "workerDid", "delegationId", "authorityDelegationId", "revocationId", "environment", "status", "issuedAt", "expiresAt"],
       "properties": {
         "type": { "const": "WorkerRevocationLease" },
         "version": { "const": "1" },
         "issuer": { "$ref": "#/$defs/didWeb" },
         "providerId": { "$ref": "#/$defs/didWeb" },
         "workerId": { "$ref": "#/$defs/token" },
+        "workerDid": { "$ref": "#/$defs/didWeb" },
         "delegationId": { "$ref": "#/$defs/token" },
+        "authorityDelegationId": { "$ref": "#/$defs/token" },
         "revocationId": { "$ref": "#/$defs/token" },
         "environment": { "$ref": "#/$defs/token" },
         "status": { "enum": ["ACTIVE", "REVOKED"] },

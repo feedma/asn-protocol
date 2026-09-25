@@ -90,6 +90,20 @@
       "canonicalHash": null
     },
     {
+      "name": "provider delegation to a bounded revocation authority",
+      "contractType": "RevocationAuthorityDelegation",
+      "input": "{\"type\":\"RevocationAuthorityDelegation\",\"version\":\"1\",\"delegationId\":\"rad_01K\",\"providerId\":\"did:web:provider.example\",\"authorityDid\":\"did:web:asn.example:revocation\",\"authorityKeyId\":\"did:web:asn.example:revocation#key-1\",\"workerDid\":\"did:web:worker.example\",\"workerDelegationId\":\"wdl_01K\",\"revocationId\":\"rev_01K\",\"environment\":\"asn.example\",\"notBefore\":\"2026-09-22T00:00:00Z\",\"expiresAt\":\"2026-10-22T00:00:00Z\",\"maxLeaseSeconds\":300}",
+      "valid": true,
+      "canonicalHash": null
+    },
+    {
+      "name": "revocation authority cannot issue overlong leases",
+      "contractType": "RevocationAuthorityDelegation",
+      "input": "{\"type\":\"RevocationAuthorityDelegation\",\"version\":\"1\",\"delegationId\":\"rad_01K\",\"providerId\":\"did:web:provider.example\",\"authorityDid\":\"did:web:asn.example:revocation\",\"authorityKeyId\":\"did:web:asn.example:revocation#key-1\",\"workerDid\":\"did:web:worker.example\",\"workerDelegationId\":\"wdl_01K\",\"revocationId\":\"rev_01K\",\"environment\":\"asn.example\",\"notBefore\":\"2026-09-22T00:00:00Z\",\"expiresAt\":\"2026-10-22T00:00:00Z\",\"maxLeaseSeconds\":301}",
+      "valid": false,
+      "canonicalHash": null
+    },
+    {
       "name": "worker session proof with durable cursors",
       "contractType": "WorkerSessionProof",
       "input": "{\"type\":\"WorkerSessionProof\",\"version\":\"1\",\"sessionId\":\"wss_01K\",\"nonce\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"workerId\":\"wrk_01K\",\"environment\":\"asn.example\",\"audience\":\"https://asn.example/worker-gateway\",\"cursors\":{\"workerToGateway\":41,\"gatewayToWorker\":17},\"issuedAt\":\"2026-09-22T12:02:10Z\",\"expiresAt\":\"2026-09-22T12:02:50Z\"}",
@@ -120,14 +134,14 @@
     {
       "name": "active worker revocation lease",
       "contractType": "WorkerRevocationLease",
-      "input": "{\"type\":\"WorkerRevocationLease\",\"version\":\"1\",\"issuer\":\"did:web:asn.example:revocation\",\"providerId\":\"did:web:provider.example\",\"workerId\":\"wrk_01K\",\"delegationId\":\"wdl_01K\",\"revocationId\":\"rev_01K\",\"environment\":\"asn.example\",\"status\":\"ACTIVE\",\"issuedAt\":\"2026-09-22T12:00:00Z\",\"expiresAt\":\"2026-09-22T12:05:00Z\"}",
+      "input": "{\"type\":\"WorkerRevocationLease\",\"version\":\"1\",\"issuer\":\"did:web:asn.example:revocation\",\"providerId\":\"did:web:provider.example\",\"workerId\":\"wrk_01K\",\"workerDid\":\"did:web:worker.example\",\"delegationId\":\"wdl_01K\",\"authorityDelegationId\":\"rad_01K\",\"revocationId\":\"rev_01K\",\"environment\":\"asn.example\",\"status\":\"ACTIVE\",\"issuedAt\":\"2026-09-22T12:00:00Z\",\"expiresAt\":\"2026-09-22T12:05:00Z\"}",
       "valid": true,
       "canonicalHash": null
     },
     {
       "name": "worker revocation lease rejects excess freshness window",
       "contractType": "WorkerRevocationLease",
-      "input": "{\"type\":\"WorkerRevocationLease\",\"version\":\"1\",\"issuer\":\"did:web:asn.example:revocation\",\"providerId\":\"did:web:provider.example\",\"workerId\":\"wrk_01K\",\"delegationId\":\"wdl_01K\",\"revocationId\":\"rev_01K\",\"environment\":\"asn.example\",\"status\":\"ACTIVE\",\"issuedAt\":\"2026-09-22T12:00:00Z\",\"expiresAt\":\"2026-09-22T12:05:01Z\"}",
+      "input": "{\"type\":\"WorkerRevocationLease\",\"version\":\"1\",\"issuer\":\"did:web:asn.example:revocation\",\"providerId\":\"did:web:provider.example\",\"workerId\":\"wrk_01K\",\"workerDid\":\"did:web:worker.example\",\"delegationId\":\"wdl_01K\",\"authorityDelegationId\":\"rad_01K\",\"revocationId\":\"rev_01K\",\"environment\":\"asn.example\",\"status\":\"ACTIVE\",\"issuedAt\":\"2026-09-22T12:00:00Z\",\"expiresAt\":\"2026-09-22T12:05:01Z\"}",
       "valid": false,
       "canonicalHash": null
     }

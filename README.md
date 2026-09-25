@@ -13,7 +13,7 @@ The `0.2.0-alpha.1` release adds provider-defined, versioned service
 contracts with inline JSON Schemas, RFC 8785/SHA-256 contract bindings and
 worker support assertions that reference an exact contract hash.
 
-The next `0.3.0-alpha.1` release adds transport-neutral worker control
+The `0.3.0-alpha.1` release adds transport-neutral worker control
 contracts for:
 
 - challenge-bound worker enrollment and provider-signed delegation;
@@ -28,6 +28,12 @@ The Rust types enforce cross-object bindings and time windows. The
 [`worker-control-v1` schema](schemas/worker-control-v1.schema.json) and shared
 positive/negative fixtures keep non-Rust implementations aligned without
 making WebSocket framing part of the authorization contract.
+
+The next `0.3.0-alpha.2` release adds the missing provider-to-revocation-
+authority delegation. Status authorities can issue short-lived worker leases
+only for the bound provider, worker DID, worker delegation, revocation identity
+and environment. The worker lease now carries those authority-chain bindings,
+so gateway connectivity alone cannot manufacture fresh authorization state.
 
 Run every check from the repository root:
 
