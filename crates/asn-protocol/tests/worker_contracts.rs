@@ -2,10 +2,10 @@ use asn_protocol::{
     identity::PublicJwk,
     service::WorkerServiceSupport,
     worker::{
-        CreateWorkerEnrollmentChallenge, DurableCursors, RevocationStatus, SessionChallenge,
-        SessionHello, WorkerCapacity, WorkerContractError, WorkerDelegation,
-        WorkerEnrollmentChallenge, WorkerEnrollmentProof, WorkerRevocationLease, WorkerScope,
-        WorkerSessionProof,
+        CreateWorkerEnrollmentChallenge, DurableCursors, RevocationAuthorityDelegation,
+        RevocationStatus, SessionChallenge, SessionHello, WorkerCapacity, WorkerContractError,
+        WorkerDelegation, WorkerEnrollmentChallenge, WorkerEnrollmentProof, WorkerRevocationLease,
+        WorkerScope, WorkerSessionProof,
     },
 };
 use time::{OffsetDateTime, format_description::well_known::Rfc3339};
@@ -243,21 +243,50 @@ fn capacity_reports_only_consistent_concurrent_operation_slots() {
 
 #[test]
 fn revocation_lease_stops_new_work_when_revoked_or_stale() {
+    let authority = RevocationAuthorityDelegation {
+        delegation_type: "RevocationAuthorityDelegation".into(),
+        version: "1".into(),
+        delegation_id: "rad_01K".into(),
+        provider_id: "did:web:provider.example".into(),
+        authority_did: "did:web:asn.example:revocation".into(),
+        authority_key_id: "did:web:asn.example:revocation#key-1".into(),
+        worker_did: "did:web:worker.example".into(),
+        worker_delegation_id: "wdl_01K".into(),
+        revocation_id: "rev_01K".into(),
+        environment: "asn.example".into(),
+        not_before: "2026-09-22T00:00:00Z".into(),
+        expires_at: "2026-10-22T00:00:00Z".into(),
+        max_lease_seconds: 300,
+    };
     let mut lease = WorkerRevocationLease {
         lease_type: "WorkerRevocationLease".into(),
         version: "1".into(),
         issuer: "did:web:asn.example:revocation".into(),
         provider_id: "did:web:provider.example".into(),
         worker_id: "wrk_01K".into(),
+        worker_did: "did:web:worker.example".into(),
         delegation_id: "wdl_01K".into(),
+        authority_delegation_id: "rad_01K".into(),
         revocation_id: "rev_01K".into(),
         environment: "asn.example".into(),
         status: RevocationStatus::Active,
         issued_at: "2026-09-22T12:00:00Z".into(),
         expires_at: "2026-09-22T12:05:00Z".into(),
     };
+    authority
+        .authorize_lease(&lease, at("2026-09-22T12:04:00Z"))
+        .unwrap();
     assert!(lease.permits_new_work_at(at("2026-09-22T12:04:59Z")));
     assert!(!lease.permits_new_work_at(at("2026-09-22T12:05:01Z")));
     lease.status = RevocationStatus::Revoked;
     assert!(!lease.permits_new_work_at(at("2026-09-22T12:04:00Z")));
+
+    lease.status = RevocationStatus::Active;
+    lease.worker_did = "did:web:other-worker.example".into();
+    assert_eq!(
+        authority
+            .authorize_lease(&lease, at("2026-09-22T12:04:00Z"))
+            .unwrap_err(),
+        WorkerContractError::BindingMismatch("revocation authority delegation")
+    );
 }

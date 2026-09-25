@@ -6,8 +6,8 @@ use asn_protocol::{
     service::ServiceContract,
     wire::Envelope,
     worker::{
-        WorkerCapabilities, WorkerDelegation, WorkerEnrollmentProof, WorkerRevocationLease,
-        WorkerScope, WorkerSessionProof,
+        RevocationAuthorityDelegation, WorkerCapabilities, WorkerDelegation, WorkerEnrollmentProof,
+        WorkerRevocationLease, WorkerScope, WorkerSessionProof,
     },
 };
 use serde::Deserialize;
@@ -159,6 +159,11 @@ fn validate_worker_contract(
         }
         "WorkerDelegation" => {
             let value: WorkerDelegation = serde_json::from_slice(&canonical)?;
+            value.validate()?;
+            Ok(None)
+        }
+        "RevocationAuthorityDelegation" => {
+            let value: RevocationAuthorityDelegation = serde_json::from_slice(&canonical)?;
             value.validate()?;
             Ok(None)
         }

@@ -83,9 +83,29 @@ pub struct WorkerDelegation {
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RevocationAuthorityDelegation {
+    #[serde(rename = "type")]
+    pub delegation_type: String,
+    pub version: String,
+    pub delegation_id: String,
+    pub provider_id: String,
+    pub authority_did: String,
+    pub authority_key_id: String,
+    pub worker_did: String,
+    pub worker_delegation_id: String,
+    pub revocation_id: String,
+    pub environment: String,
+    pub not_before: String,
+    pub expires_at: String,
+    pub max_lease_seconds: u64,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CompleteWorkerEnrollment {
     pub worker_proof_jws: String,
     pub provider_delegation_jws: String,
+    pub revocation_authority_delegation_jws: String,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
@@ -182,7 +202,9 @@ pub struct WorkerRevocationLease {
     pub issuer: String,
     pub provider_id: String,
     pub worker_id: String,
+    pub worker_did: String,
     pub delegation_id: String,
+    pub authority_delegation_id: String,
     pub revocation_id: String,
     pub environment: String,
     pub status: RevocationStatus,
@@ -424,12 +446,82 @@ impl WorkerDelegation {
     }
 }
 
+impl RevocationAuthorityDelegation {
+    pub fn validate(&self) -> Result<(), WorkerContractError> {
+        validate_type_version(
+            &self.delegation_type,
+            "RevocationAuthorityDelegation",
+            &self.version,
+        )?;
+        validate_token(&self.delegation_id, "invalid delegationId")?;
+        validate_did(&self.provider_id, "invalid providerId")?;
+        validate_worker_key(&self.authority_did, &self.authority_key_id)?;
+        validate_did(&self.worker_did, "invalid workerDid")?;
+        validate_token(&self.worker_delegation_id, "invalid workerDelegationId")?;
+        validate_token(&self.revocation_id, "invalid revocationId")?;
+        validate_token(&self.environment, "invalid environment")?;
+        validate_window(
+            &self.not_before,
+            &self.expires_at,
+            i64::MAX,
+            "revocation authority delegation",
+        )?;
+        if self.max_lease_seconds == 0
+            || self.max_lease_seconds > DEFAULT_MAX_REVOCATION_STALENESS_SECONDS
+        {
+            return Err(WorkerContractError::Invalid("invalid maxLeaseSeconds"));
+        }
+        Ok(())
+    }
+
+    pub fn authorize_lease(
+        &self,
+        lease: &WorkerRevocationLease,
+        now: OffsetDateTime,
+    ) -> Result<(), WorkerContractError> {
+        self.validate()?;
+        lease.validate()?;
+        if lease.issuer != self.authority_did
+            || lease.provider_id != self.provider_id
+            || lease.worker_did != self.worker_did
+            || lease.delegation_id != self.worker_delegation_id
+            || lease.authority_delegation_id != self.delegation_id
+            || lease.revocation_id != self.revocation_id
+            || lease.environment != self.environment
+        {
+            return Err(WorkerContractError::BindingMismatch(
+                "revocation authority delegation",
+            ));
+        }
+        let authority_start = parse_timestamp(&self.not_before, "revocation authority delegation")?;
+        let authority_end = parse_timestamp(&self.expires_at, "revocation authority delegation")?;
+        let lease_start = parse_timestamp(&lease.issued_at, "revocation lease")?;
+        let lease_end = parse_timestamp(&lease.expires_at, "revocation lease")?;
+        if now < authority_start
+            || now > authority_end
+            || lease_start < authority_start
+            || lease_end > authority_end
+            || (lease_end - lease_start).whole_seconds()
+                > i64::try_from(self.max_lease_seconds).expect("validated lease seconds fit in i64")
+        {
+            return Err(WorkerContractError::InvalidTimeWindow(
+                "revocation lease outside delegated authority",
+            ));
+        }
+        Ok(())
+    }
+}
+
 impl CompleteWorkerEnrollment {
     pub fn validate(&self) -> Result<(), WorkerContractError> {
         validate_compact_jws(&self.worker_proof_jws, "invalid workerProofJws")?;
         validate_compact_jws(
             &self.provider_delegation_jws,
             "invalid providerDelegationJws",
+        )?;
+        validate_compact_jws(
+            &self.revocation_authority_delegation_jws,
+            "invalid revocationAuthorityDelegationJws",
         )
     }
 }
@@ -609,7 +701,12 @@ impl WorkerRevocationLease {
         validate_did(&self.issuer, "invalid issuer")?;
         validate_did(&self.provider_id, "invalid providerId")?;
         validate_token(&self.worker_id, "invalid workerId")?;
+        validate_did(&self.worker_did, "invalid workerDid")?;
         validate_token(&self.delegation_id, "invalid delegationId")?;
+        validate_token(
+            &self.authority_delegation_id,
+            "invalid authorityDelegationId",
+        )?;
         validate_token(&self.revocation_id, "invalid revocationId")?;
         validate_token(&self.environment, "invalid environment")?;
         validate_window(
