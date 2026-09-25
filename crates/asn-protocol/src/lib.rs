@@ -7,3 +7,4 @@ pub mod identity;
 pub mod service;
 pub mod signers;
 pub mod wire;
+pub mod worker;

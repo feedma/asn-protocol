@@ -46,6 +46,92 @@
       "contractHash": null
     }
   ],
+  "workerContracts": [
+    {
+      "name": "worker scope bound to an exact service contract",
+      "contractType": "WorkerScope",
+      "input": "{\"services\":[{\"serviceId\":\"geojson-rendering\",\"serviceVersion\":\"1.0.0\",\"contractHash\":\"urn:sha256:dAL7LqUGJyt53mKyPMXrf8OlooGKSdsPj2_sqodCUFs\"}],\"maxConcurrentOperations\":2}",
+      "valid": true,
+      "canonicalHash": "urn:sha256:UZCpQUQm98nb91IA4umwE-0H2mFAw6tUvrmDgjnTVGw"
+    },
+    {
+      "name": "worker scope rejects duplicate service support",
+      "contractType": "WorkerScope",
+      "input": "{\"services\":[{\"serviceId\":\"geojson-rendering\",\"serviceVersion\":\"1.0.0\",\"contractHash\":\"urn:sha256:dAL7LqUGJyt53mKyPMXrf8OlooGKSdsPj2_sqodCUFs\"},{\"serviceId\":\"geojson-rendering\",\"serviceVersion\":\"1.0.0\",\"contractHash\":\"urn:sha256:dAL7LqUGJyt53mKyPMXrf8OlooGKSdsPj2_sqodCUFs\"}],\"maxConcurrentOperations\":2}",
+      "valid": false,
+      "canonicalHash": null
+    },
+    {
+      "name": "worker enrollment proof",
+      "contractType": "WorkerEnrollmentProof",
+      "input": "{\"type\":\"WorkerEnrollmentProof\",\"version\":\"1\",\"challengeId\":\"wch_01K\",\"nonce\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"providerId\":\"did:web:provider.example\",\"workerDid\":\"did:web:worker.example\",\"keyId\":\"did:web:worker.example#key-2026-09\",\"publicKeyThumbprint\":\"gWjt7nmB1udyFpLYVp0SxJnI8lJEvl7q8AFYZRqnGV8\",\"requestedScopeHash\":\"urn:sha256:UZCpQUQm98nb91IA4umwE-0H2mFAw6tUvrmDgjnTVGw\",\"environment\":\"asn.example\",\"audience\":\"https://asn.example/worker-enrollment\",\"issuedAt\":\"2026-09-22T12:01:00Z\",\"expiresAt\":\"2026-09-22T12:04:00Z\"}",
+      "valid": true,
+      "canonicalHash": null
+    },
+    {
+      "name": "worker enrollment proof rejects a challenge over five minutes",
+      "contractType": "WorkerEnrollmentProof",
+      "input": "{\"type\":\"WorkerEnrollmentProof\",\"version\":\"1\",\"challengeId\":\"wch_01K\",\"nonce\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"providerId\":\"did:web:provider.example\",\"workerDid\":\"did:web:worker.example\",\"keyId\":\"did:web:worker.example#key-2026-09\",\"publicKeyThumbprint\":\"gWjt7nmB1udyFpLYVp0SxJnI8lJEvl7q8AFYZRqnGV8\",\"requestedScopeHash\":\"urn:sha256:UZCpQUQm98nb91IA4umwE-0H2mFAw6tUvrmDgjnTVGw\",\"environment\":\"asn.example\",\"audience\":\"https://asn.example/worker-enrollment\",\"issuedAt\":\"2026-09-22T12:01:00Z\",\"expiresAt\":\"2026-09-22T12:06:01Z\"}",
+      "valid": false,
+      "canonicalHash": null
+    },
+    {
+      "name": "provider worker delegation",
+      "contractType": "WorkerDelegation",
+      "input": "{\"type\":\"WorkerDelegation\",\"version\":\"1\",\"delegationId\":\"wdl_01K\",\"providerId\":\"did:web:provider.example\",\"workerDid\":\"did:web:worker.example\",\"keyId\":\"did:web:worker.example#key-2026-09\",\"publicKeyThumbprint\":\"gWjt7nmB1udyFpLYVp0SxJnI8lJEvl7q8AFYZRqnGV8\",\"scope\":{\"services\":[{\"serviceId\":\"geojson-rendering\",\"serviceVersion\":\"1.0.0\",\"contractHash\":\"urn:sha256:dAL7LqUGJyt53mKyPMXrf8OlooGKSdsPj2_sqodCUFs\"}],\"maxConcurrentOperations\":2},\"environment\":\"asn.example\",\"protocolVersion\":\"1\",\"notBefore\":\"2026-09-22T00:00:00Z\",\"expiresAt\":\"2026-10-22T00:00:00Z\",\"revocationId\":\"rev_01K\",\"maxRevocationStalenessSeconds\":300}",
+      "valid": true,
+      "canonicalHash": null
+    },
+    {
+      "name": "provider worker delegation rejects broader revocation staleness",
+      "contractType": "WorkerDelegation",
+      "input": "{\"type\":\"WorkerDelegation\",\"version\":\"1\",\"delegationId\":\"wdl_01K\",\"providerId\":\"did:web:provider.example\",\"workerDid\":\"did:web:worker.example\",\"keyId\":\"did:web:worker.example#key-2026-09\",\"publicKeyThumbprint\":\"gWjt7nmB1udyFpLYVp0SxJnI8lJEvl7q8AFYZRqnGV8\",\"scope\":{\"services\":[{\"serviceId\":\"geojson-rendering\",\"serviceVersion\":\"1.0.0\",\"contractHash\":\"urn:sha256:dAL7LqUGJyt53mKyPMXrf8OlooGKSdsPj2_sqodCUFs\"}],\"maxConcurrentOperations\":2},\"environment\":\"asn.example\",\"protocolVersion\":\"1\",\"notBefore\":\"2026-09-22T00:00:00Z\",\"expiresAt\":\"2026-10-22T00:00:00Z\",\"revocationId\":\"rev_01K\",\"maxRevocationStalenessSeconds\":301}",
+      "valid": false,
+      "canonicalHash": null
+    },
+    {
+      "name": "worker session proof with durable cursors",
+      "contractType": "WorkerSessionProof",
+      "input": "{\"type\":\"WorkerSessionProof\",\"version\":\"1\",\"sessionId\":\"wss_01K\",\"nonce\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"workerId\":\"wrk_01K\",\"environment\":\"asn.example\",\"audience\":\"https://asn.example/worker-gateway\",\"cursors\":{\"workerToGateway\":41,\"gatewayToWorker\":17},\"issuedAt\":\"2026-09-22T12:02:10Z\",\"expiresAt\":\"2026-09-22T12:02:50Z\"}",
+      "valid": true,
+      "canonicalHash": null
+    },
+    {
+      "name": "worker session proof rejects an unsafe cursor",
+      "contractType": "WorkerSessionProof",
+      "input": "{\"type\":\"WorkerSessionProof\",\"version\":\"1\",\"sessionId\":\"wss_01K\",\"nonce\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"workerId\":\"wrk_01K\",\"environment\":\"asn.example\",\"audience\":\"https://asn.example/worker-gateway\",\"cursors\":{\"workerToGateway\":9007199254740992,\"gatewayToWorker\":17},\"issuedAt\":\"2026-09-22T12:02:10Z\",\"expiresAt\":\"2026-09-22T12:02:50Z\"}",
+      "valid": false,
+      "canonicalHash": null
+    },
+    {
+      "name": "worker capabilities with exact available slots",
+      "contractType": "WorkerCapabilities",
+      "input": "{\"services\":[{\"serviceId\":\"geojson-rendering\",\"serviceVersion\":\"1.0.0\",\"contractHash\":\"urn:sha256:dAL7LqUGJyt53mKyPMXrf8OlooGKSdsPj2_sqodCUFs\"}],\"capacity\":{\"maxConcurrentOperations\":4,\"activeOperations\":1,\"reservedOperations\":1,\"availableOperationSlots\":2}}",
+      "valid": true,
+      "canonicalHash": null
+    },
+    {
+      "name": "worker capabilities reject inconsistent slots",
+      "contractType": "WorkerCapabilities",
+      "input": "{\"services\":[{\"serviceId\":\"geojson-rendering\",\"serviceVersion\":\"1.0.0\",\"contractHash\":\"urn:sha256:dAL7LqUGJyt53mKyPMXrf8OlooGKSdsPj2_sqodCUFs\"}],\"capacity\":{\"maxConcurrentOperations\":4,\"activeOperations\":1,\"reservedOperations\":1,\"availableOperationSlots\":3}}",
+      "valid": false,
+      "canonicalHash": null
+    },
+    {
+      "name": "active worker revocation lease",
+      "contractType": "WorkerRevocationLease",
+      "input": "{\"type\":\"WorkerRevocationLease\",\"version\":\"1\",\"issuer\":\"did:web:asn.example:revocation\",\"providerId\":\"did:web:provider.example\",\"workerId\":\"wrk_01K\",\"delegationId\":\"wdl_01K\",\"revocationId\":\"rev_01K\",\"environment\":\"asn.example\",\"status\":\"ACTIVE\",\"issuedAt\":\"2026-09-22T12:00:00Z\",\"expiresAt\":\"2026-09-22T12:05:00Z\"}",
+      "valid": true,
+      "canonicalHash": null
+    },
+    {
+      "name": "worker revocation lease rejects excess freshness window",
+      "contractType": "WorkerRevocationLease",
+      "input": "{\"type\":\"WorkerRevocationLease\",\"version\":\"1\",\"issuer\":\"did:web:asn.example:revocation\",\"providerId\":\"did:web:provider.example\",\"workerId\":\"wrk_01K\",\"delegationId\":\"wdl_01K\",\"revocationId\":\"rev_01K\",\"environment\":\"asn.example\",\"status\":\"ACTIVE\",\"issuedAt\":\"2026-09-22T12:00:00Z\",\"expiresAt\":\"2026-09-22T12:05:01Z\"}",
+      "valid": false,
+      "canonicalHash": null
+    }
+  ],
   "jws": [
     {
       "name": "valid ES256 WorkerSessionProof",
