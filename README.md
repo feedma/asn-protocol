@@ -9,9 +9,25 @@ initial `0.1.0-alpha.1` release provides:
 - separate seams for ASN JWS, EIP-712, credential-holder and data-key signers;
 - language-neutral schemas and reusable valid/invalid conformance vectors.
 
-The next `0.2.0-alpha.1` release adds provider-defined, versioned service
+The `0.2.0-alpha.1` release adds provider-defined, versioned service
 contracts with inline JSON Schemas, RFC 8785/SHA-256 contract bindings and
 worker support assertions that reference an exact contract hash.
+
+The next `0.3.0-alpha.1` release adds transport-neutral worker control
+contracts for:
+
+- challenge-bound worker enrollment and provider-signed delegation;
+- proof-of-possession bound to provider, worker key, exact service scope,
+  environment, audience and expiry;
+- authenticated session challenges with durable bidirectional cursors;
+- exact service capabilities and concurrent-operation slot reports; and
+- provider-authorized revocation leases with a five-minute maximum freshness
+  window.
+
+The Rust types enforce cross-object bindings and time windows. The
+[`worker-control-v1` schema](schemas/worker-control-v1.schema.json) and shared
+positive/negative fixtures keep non-Rust implementations aligned without
+making WebSocket framing part of the authorization contract.
 
 Run every check from the repository root:
 

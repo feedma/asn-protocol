@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://asn.dev/schemas/worker-control-v1.schema.json",
+  "title": "ASN worker enrollment, session and capability contracts version 1",
+  "anyOf": [
+    { "$ref": "#/$defs/createEnrollmentChallenge" },
+    { "$ref": "#/$defs/enrollmentChallenge" },
+    { "$ref": "#/$defs/enrollmentProof" },
+    { "$ref": "#/$defs/workerDelegation" },
+    { "$ref": "#/$defs/sessionHello" },
+    { "$ref": "#/$defs/sessionChallenge" },
+    { "$ref": "#/$defs/sessionProof" },
+    { "$ref": "#/$defs/sessionReady" },
+    { "$ref": "#/$defs/capabilities" },
+    { "$ref": "#/$defs/revocationLease" }
+  ],
+  "$defs": {
+    "token": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^\\S+$"
+    },
+    "didWeb": {
+      "type": "string",
+      "minLength": 9,
+      "maxLength": 512,
+      "pattern": "^did:web:\\S+$"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^urn:sha256:[A-Za-z0-9_-]{43}$"
+    },
+    "thumbprint": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "nonce": {
+      "type": "string",
+      "minLength": 43,
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "safeInteger": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "positiveSafeInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "publicKeyJwk": {
+      "type": "object",
+      "required": ["kty", "crv", "x", "y"],
+      "properties": {
+        "kty": { "const": "EC" },
+        "crv": { "const": "P-256" },
+        "x": { "$ref": "#/$defs/thumbprint" },
+        "y": { "$ref": "#/$defs/thumbprint" }
+      },
+      "additionalProperties": false
+    },
+    "serviceSupport": {
+      "type": "object",
+      "required": ["serviceId", "serviceVersion", "contractHash"],
+      "properties": {
+        "serviceId": { "type": "string", "pattern": "^[a-z0-9._/-]{1,128}$" },
+        "serviceVersion": { "type": "string", "pattern": "^[A-Za-z0-9._+-]{1,64}$" },
+        "contractHash": { "$ref": "#/$defs/hash" }
+      },
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "required": ["services", "maxConcurrentOperations"],
+      "properties": {
+        "services": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/serviceSupport" }
+        },
+        "maxConcurrentOperations": { "$ref": "#/$defs/positiveSafeInteger" }
+      },
+      "additionalProperties": false
+    },
+    "cursors": {
+      "type": "object",
+      "required": ["workerToGateway", "gatewayToWorker"],
+      "properties": {
+        "workerToGateway": { "$ref": "#/$defs/safeInteger" },
+        "gatewayToWorker": { "$ref": "#/$defs/safeInteger" }
+      },
+      "additionalProperties": false
+    },
+    "createEnrollmentChallenge": {
+      "type": "object",
+      "required": ["providerId", "workerDid", "publicKeyJwk", "keyId", "requestedScope", "environment"],
+      "properties": {
+        "providerId": { "$ref": "#/$defs/didWeb" },
+        "workerDid": { "$ref": "#/$defs/didWeb" },
+        "publicKeyJwk": { "$ref": "#/$defs/publicKeyJwk" },
+        "keyId": { "$ref": "#/$defs/token" },
+        "requestedScope": { "$ref": "#/$defs/scope" },
+        "environment": { "$ref": "#/$defs/token" }
+      },
+      "additionalProperties": false
+    },
+    "enrollmentChallenge": {
+      "type": "object",
+      "required": ["challengeId", "nonce", "audience", "expiresAt"],
+      "properties": {
+        "challengeId": { "$ref": "#/$defs/token" },
+        "nonce": { "$ref": "#/$defs/nonce" },
+        "audience": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "enrollmentProof": {
+      "type": "object",
+      "required": ["type", "version", "challengeId", "nonce", "providerId", "workerDid", "keyId", "publicKeyThumbprint", "requestedScopeHash", "environment", "audience", "issuedAt", "expiresAt"],
+      "properties": {
+        "type": { "const": "WorkerEnrollmentProof" },
+        "version": { "const": "1" },
+        "challengeId": { "$ref": "#/$defs/token" },
+        "nonce": { "$ref": "#/$defs/nonce" },
+        "providerId": { "$ref": "#/$defs/didWeb" },
+        "workerDid": { "$ref": "#/$defs/didWeb" },
+        "keyId": { "$ref": "#/$defs/token" },
+        "publicKeyThumbprint": { "$ref": "#/$defs/thumbprint" },
+        "requestedScopeHash": { "$ref": "#/$defs/hash" },
+        "environment": { "$ref": "#/$defs/token" },
+        "audience": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "issuedAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "workerDelegation": {
+      "type": "object",
+      "required": ["type", "version", "delegationId", "providerId", "workerDid", "keyId", "publicKeyThumbprint", "scope", "environment", "protocolVersion", "notBefore", "expiresAt", "revocationId", "maxRevocationStalenessSeconds"],
+      "properties": {
+        "type": { "const": "WorkerDelegation" },
+        "version": { "const": "1" },
+        "delegationId": { "$ref": "#/$defs/token" },
+        "providerId": { "$ref": "#/$defs/didWeb" },
+        "workerDid": { "$ref": "#/$defs/didWeb" },
+        "keyId": { "$ref": "#/$defs/token" },
+        "publicKeyThumbprint": { "$ref": "#/$defs/thumbprint" },
+        "scope": { "$ref": "#/$defs/scope" },
+        "environment": { "$ref": "#/$defs/token" },
+        "protocolVersion": { "const": "1" },
+        "notBefore": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "revocationId": { "$ref": "#/$defs/token" },
+        "maxRevocationStalenessSeconds": { "type": "integer", "minimum": 1, "maximum": 300 }
+      },
+      "additionalProperties": false
+    },
+    "sessionHello": {
+      "type": "object",
+      "required": ["workerId", "credential", "supportedProtocolVersions", "cursors"],
+      "properties": {
+        "workerId": { "$ref": "#/$defs/token" },
+        "credential": { "$ref": "#/$defs/token" },
+        "supportedProtocolVersions": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "const": "1" } },
+        "cursors": { "$ref": "#/$defs/cursors" }
+      },
+      "additionalProperties": false
+    },
+    "sessionChallenge": {
+      "type": "object",
+      "required": ["sessionId", "nonce", "audience", "expiresAt"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/token" },
+        "nonce": { "$ref": "#/$defs/nonce" },
+        "audience": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "sessionProof": {
+      "type": "object",
+      "required": ["type", "version", "sessionId", "nonce", "workerId", "environment", "audience", "cursors", "issuedAt", "expiresAt"],
+      "properties": {
+        "type": { "const": "WorkerSessionProof" },
+        "version": { "const": "1" },
+        "sessionId": { "$ref": "#/$defs/token" },
+        "nonce": { "$ref": "#/$defs/nonce" },
+        "workerId": { "$ref": "#/$defs/token" },
+        "environment": { "$ref": "#/$defs/token" },
+        "audience": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "cursors": { "$ref": "#/$defs/cursors" },
+        "issuedAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "sessionReady": {
+      "type": "object",
+      "required": ["sessionId", "negotiatedProtocolVersion", "authoritativeCursors", "heartbeatIntervalSeconds", "revocationLeaseJws"],
+      "properties": {
+        "sessionId": { "$ref": "#/$defs/token" },
+        "negotiatedProtocolVersion": { "const": "1" },
+        "authoritativeCursors": { "$ref": "#/$defs/cursors" },
+        "heartbeatIntervalSeconds": { "$ref": "#/$defs/positiveSafeInteger" },
+        "revocationLeaseJws": { "$ref": "#/$defs/token" }
+      },
+      "additionalProperties": false
+    },
+    "capacity": {
+      "type": "object",
+      "required": ["maxConcurrentOperations", "activeOperations", "reservedOperations", "availableOperationSlots"],
+      "properties": {
+        "maxConcurrentOperations": { "$ref": "#/$defs/positiveSafeInteger" },
+        "activeOperations": { "$ref": "#/$defs/safeInteger" },
+        "reservedOperations": { "$ref": "#/$defs/safeInteger" },
+        "availableOperationSlots": { "$ref": "#/$defs/safeInteger" }
+      },
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "type": "object",
+      "required": ["services", "capacity"],
+      "properties": {
+        "services": { "type": "array", "minItems": 1, "maxItems": 256, "uniqueItems": true, "items": { "$ref": "#/$defs/serviceSupport" } },
+        "capacity": { "$ref": "#/$defs/capacity" }
+      },
+      "additionalProperties": false
+    },
+    "revocationLease": {
+      "type": "object",
+      "required": ["type", "version", "issuer", "providerId", "workerId", "delegationId", "revocationId", "environment", "status", "issuedAt", "expiresAt"],
+      "properties": {
+        "type": { "const": "WorkerRevocationLease" },
+        "version": { "const": "1" },
+        "issuer": { "$ref": "#/$defs/didWeb" },
+        "providerId": { "$ref": "#/$defs/didWeb" },
+        "workerId": { "$ref": "#/$defs/token" },
+        "delegationId": { "$ref": "#/$defs/token" },
+        "revocationId": { "$ref": "#/$defs/token" },
+        "environment": { "$ref": "#/$defs/token" },
+        "status": { "enum": ["ACTIVE", "REVOKED"] },
+        "issuedAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
