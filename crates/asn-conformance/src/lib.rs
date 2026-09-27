@@ -6,8 +6,10 @@ use asn_protocol::{
     service::ServiceContract,
     wire::Envelope,
     worker::{
-        RevocationAuthorityDelegation, WorkerCapabilities, WorkerDelegation, WorkerEnrollmentProof,
-        WorkerRevocationLease, WorkerScope, WorkerSessionProof,
+        RevocationAuthorityDelegation, RevocationLeaseUpdate, WorkerAcknowledgement,
+        WorkerCapabilities, WorkerCapabilitiesUpdate, WorkerDelegation, WorkerDrain,
+        WorkerEnrollmentProof, WorkerHeartbeat, WorkerResume, WorkerRevocationLease, WorkerScope,
+        WorkerSessionProof,
     },
 };
 use serde::Deserialize;
@@ -179,6 +181,36 @@ fn validate_worker_contract(
         }
         "WorkerRevocationLease" => {
             let value: WorkerRevocationLease = serde_json::from_slice(&canonical)?;
+            value.validate()?;
+            Ok(None)
+        }
+        "WorkerAcknowledgement" => {
+            let value: WorkerAcknowledgement = serde_json::from_slice(&canonical)?;
+            value.validate()?;
+            Ok(None)
+        }
+        "WorkerCapabilitiesUpdate" => {
+            let value: WorkerCapabilitiesUpdate = serde_json::from_slice(&canonical)?;
+            value.validate()?;
+            Ok(None)
+        }
+        "WorkerHeartbeat" => {
+            let value: WorkerHeartbeat = serde_json::from_slice(&canonical)?;
+            value.validate()?;
+            Ok(None)
+        }
+        "WorkerDrain" => {
+            let value: WorkerDrain = serde_json::from_slice(&canonical)?;
+            value.validate()?;
+            Ok(None)
+        }
+        "WorkerResume" => {
+            let value: WorkerResume = serde_json::from_slice(&canonical)?;
+            value.validate()?;
+            Ok(None)
+        }
+        "RevocationLeaseUpdate" => {
+            let value: RevocationLeaseUpdate = serde_json::from_slice(&canonical)?;
             value.validate()?;
             Ok(None)
         }

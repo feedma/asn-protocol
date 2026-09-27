@@ -35,6 +35,11 @@ only for the bound provider, worker DID, worker delegation, revocation identity
 and environment. The worker lease now carries those authority-chain bindings,
 so gateway connectivity alone cannot manufacture fresh authorization state.
 
+The `0.4.0-alpha.1` release adds typed, transport-neutral v1 bodies for
+durable acknowledgements, heartbeats, capability updates, draining/resuming
+and in-session revocation-lease updates. They travel inside the existing
+versioned worker envelope.
+
 Run every check from the repository root:
 
 ```bash

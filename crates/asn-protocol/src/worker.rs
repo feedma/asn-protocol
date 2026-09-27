@@ -186,6 +186,75 @@ pub struct WorkerCapabilities {
     pub capacity: WorkerCapacity,
 }
 
+/// A durable acknowledgement carried in a versioned worker envelope.
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorkerAcknowledgement {
+    pub direction: WorkerStreamDirection,
+    pub sequence: u64,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum WorkerStreamDirection {
+    WorkerToGateway,
+    GatewayToWorker,
+}
+
+/// A dynamic report which may narrow current availability, never authorization.
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorkerCapabilitiesUpdate {
+    pub capabilities: WorkerCapabilities,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorkerHeartbeat {
+    pub status: WorkerObservedStatus,
+    pub capabilities: WorkerCapabilities,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum WorkerObservedStatus {
+    Ready,
+    Draining,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorkerDrain {
+    pub reason: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct WorkerResume {}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RevocationLeaseUpdate {
+    pub revocation_lease_jws: String,
+}
+
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SessionSuperseded {
+    pub session_id: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum WorkerMessageBody {
+    Acknowledgement(WorkerAcknowledgement),
+    CapabilitiesUpdate(WorkerCapabilitiesUpdate),
+    Heartbeat(WorkerHeartbeat),
+    Drain(WorkerDrain),
+    Resume(WorkerResume),
+    RevocationLease(RevocationLeaseUpdate),
+    SessionSuperseded(SessionSuperseded),
+}
+
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum RevocationStatus {
@@ -692,6 +761,112 @@ impl WorkerCapabilities {
         }
         .validate()?;
         self.capacity.validate()
+    }
+}
+
+impl WorkerAcknowledgement {
+    pub fn validate(&self) -> Result<(), WorkerContractError> {
+        if self.sequence > MAX_SAFE_JSON_INTEGER {
+            return Err(WorkerContractError::Invalid(
+                "invalid acknowledgement sequence",
+            ));
+        }
+        Ok(())
+    }
+}
+
+impl WorkerCapabilitiesUpdate {
+    pub fn validate(&self) -> Result<(), WorkerContractError> {
+        self.capabilities.validate()
+    }
+
+    pub fn validate_within(&self, authorized: &WorkerScope) -> Result<(), WorkerContractError> {
+        self.validate()?;
+        let reported = WorkerScope {
+            services: self.capabilities.services.clone(),
+            max_concurrent_operations: self.capabilities.capacity.max_concurrent_operations,
+        };
+        if !reported.is_within(authorized) {
+            return Err(WorkerContractError::BindingMismatch("worker capabilities"));
+        }
+        Ok(())
+    }
+}
+
+impl WorkerHeartbeat {
+    pub fn validate(&self) -> Result<(), WorkerContractError> {
+        self.capabilities.validate()
+    }
+}
+
+impl WorkerDrain {
+    pub fn validate(&self) -> Result<(), WorkerContractError> {
+        if self.reason.as_ref().is_some_and(|reason| {
+            reason.is_empty()
+                || reason.len() > 512
+                || reason.bytes().any(|byte| byte.is_ascii_control())
+        }) {
+            return Err(WorkerContractError::Invalid("invalid drain reason"));
+        }
+        Ok(())
+    }
+}
+
+impl WorkerResume {
+    pub fn validate(&self) -> Result<(), WorkerContractError> {
+        Ok(())
+    }
+}
+
+impl RevocationLeaseUpdate {
+    pub fn validate(&self) -> Result<(), WorkerContractError> {
+        validate_compact_jws(&self.revocation_lease_jws, "invalid revocationLeaseJws")
+    }
+}
+
+impl SessionSuperseded {
+    pub fn validate(&self) -> Result<(), WorkerContractError> {
+        validate_token(&self.session_id, "invalid sessionId")
+    }
+}
+
+impl WorkerMessageBody {
+    pub fn from_envelope(envelope: &crate::wire::Envelope) -> Result<Self, WorkerContractError> {
+        let invalid = || WorkerContractError::Invalid("invalid worker message body");
+        let body = match envelope.message_type.as_str() {
+            "ack" => Self::Acknowledgement(
+                serde_json::from_value(envelope.body.clone()).map_err(|_| invalid())?,
+            ),
+            "worker.capabilities" => Self::CapabilitiesUpdate(
+                serde_json::from_value(envelope.body.clone()).map_err(|_| invalid())?,
+            ),
+            "worker.heartbeat" => Self::Heartbeat(
+                serde_json::from_value(envelope.body.clone()).map_err(|_| invalid())?,
+            ),
+            "worker.drain" => {
+                Self::Drain(serde_json::from_value(envelope.body.clone()).map_err(|_| invalid())?)
+            }
+            "worker.resume" => {
+                Self::Resume(serde_json::from_value(envelope.body.clone()).map_err(|_| invalid())?)
+            }
+            "revocation.lease" => Self::RevocationLease(
+                serde_json::from_value(envelope.body.clone()).map_err(|_| invalid())?,
+            ),
+            "session.superseded" => Self::SessionSuperseded(
+                serde_json::from_value(envelope.body.clone()).map_err(|_| invalid())?,
+            ),
+            _ => return Err(WorkerContractError::Invalid("unknown worker message type")),
+        };
+        match &body {
+            Self::Acknowledgement(value) => value.validate()?,
+            Self::CapabilitiesUpdate(value) => value.validate()?,
+            Self::Heartbeat(value) => value.validate()?,
+            Self::Drain(value) => value.validate()?,
+            Self::Resume(value) => value.validate()?,
+            Self::RevocationLease(value) => value.validate()?,
+            Self::SessionSuperseded(value) => value.validate()?,
+        }
+        Ok(body)
     }
 }
 
