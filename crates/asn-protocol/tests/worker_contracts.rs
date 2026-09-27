@@ -3,9 +3,12 @@ use asn_protocol::{
     service::WorkerServiceSupport,
     worker::{
         CreateWorkerEnrollmentChallenge, DurableCursors, RevocationAuthorityDelegation,
-        RevocationStatus, SessionChallenge, SessionHello, WorkerCapacity, WorkerContractError,
-        WorkerDelegation, WorkerEnrollmentChallenge, WorkerEnrollmentProof, WorkerRevocationLease,
-        WorkerScope, WorkerSessionProof,
+        RevocationLeaseUpdate, RevocationStatus, SessionChallenge, SessionHello,
+        WorkerAcknowledgement, WorkerCapabilities, WorkerCapabilitiesUpdate, WorkerCapacity,
+        WorkerContractError, WorkerDelegation, WorkerDrain, WorkerEnrollmentChallenge,
+        WorkerEnrollmentProof, WorkerHeartbeat, WorkerMessageBody, WorkerObservedStatus,
+        WorkerResume, WorkerRevocationLease, WorkerScope, WorkerSessionProof,
+        WorkerStreamDirection,
     },
 };
 use time::{OffsetDateTime, format_description::well_known::Rfc3339};
@@ -289,4 +292,62 @@ fn revocation_lease_stops_new_work_when_revoked_or_stale() {
             .unwrap_err(),
         WorkerContractError::BindingMismatch("revocation authority delegation")
     );
+}
+
+#[test]
+fn post_authentication_messages_preserve_bounded_worker_state() {
+    let capabilities = WorkerCapabilities {
+        services: vec![service()],
+        capacity: WorkerCapacity {
+            max_concurrent_operations: 2,
+            active_operations: 0,
+            reserved_operations: 0,
+            available_operation_slots: 2,
+        },
+    };
+    WorkerHeartbeat {
+        status: WorkerObservedStatus::Ready,
+        capabilities: capabilities.clone(),
+    }
+    .validate()
+    .unwrap();
+    WorkerCapabilitiesUpdate { capabilities }
+        .validate()
+        .unwrap();
+    WorkerAcknowledgement {
+        direction: WorkerStreamDirection::WorkerToGateway,
+        sequence: 42,
+    }
+    .validate()
+    .unwrap();
+    WorkerDrain {
+        reason: Some("maintenance".into()),
+    }
+    .validate()
+    .unwrap();
+    WorkerResume {}.validate().unwrap();
+    assert!(
+        RevocationLeaseUpdate {
+            revocation_lease_jws: "not-a-jws".into(),
+        }
+        .validate()
+        .is_err()
+    );
+}
+
+#[test]
+fn envelope_type_selects_the_matching_typed_worker_body() {
+    let envelope = asn_protocol::wire::Envelope::from_slice(
+        br#"{"version":"1","type":"worker.resume","messageId":"msg_01","sequence":1,"sentAt":"2026-09-22T12:02:00Z","correlationId":null,"body":{},"proof":null}"#,
+    )
+    .unwrap();
+    assert_eq!(
+        WorkerMessageBody::from_envelope(&envelope).unwrap(),
+        WorkerMessageBody::Resume(WorkerResume {})
+    );
+    let unknown = asn_protocol::wire::Envelope::from_slice(
+        br#"{"version":"1","type":"worker.unknown","messageId":"msg_02","sequence":2,"sentAt":"2026-09-22T12:02:00Z","correlationId":null,"body":{},"proof":null}"#,
+    )
+    .unwrap();
+    assert!(WorkerMessageBody::from_envelope(&unknown).is_err());
 }

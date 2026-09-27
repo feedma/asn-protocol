@@ -144,6 +144,55 @@
       "input": "{\"type\":\"WorkerRevocationLease\",\"version\":\"1\",\"issuer\":\"did:web:asn.example:revocation\",\"providerId\":\"did:web:provider.example\",\"workerId\":\"wrk_01K\",\"workerDid\":\"did:web:worker.example\",\"delegationId\":\"wdl_01K\",\"authorityDelegationId\":\"rad_01K\",\"revocationId\":\"rev_01K\",\"environment\":\"asn.example\",\"status\":\"ACTIVE\",\"issuedAt\":\"2026-09-22T12:00:00Z\",\"expiresAt\":\"2026-09-22T12:05:01Z\"}",
       "valid": false,
       "canonicalHash": null
+    },
+    {
+      "name": "durable worker acknowledgement",
+      "contractType": "WorkerAcknowledgement",
+      "input": "{\"direction\":\"workerToGateway\",\"sequence\":42}",
+      "valid": true,
+      "canonicalHash": null
+    },
+    {
+      "name": "worker acknowledgement rejects unsafe sequence",
+      "contractType": "WorkerAcknowledgement",
+      "input": "{\"direction\":\"gatewayToWorker\",\"sequence\":9007199254740992}",
+      "valid": false,
+      "canonicalHash": null
+    },
+    {
+      "name": "worker drain body",
+      "contractType": "WorkerDrain",
+      "input": "{\"reason\":\"maintenance\"}",
+      "valid": true,
+      "canonicalHash": null
+    }
+    ,{
+      "name": "worker heartbeat body",
+      "contractType": "WorkerHeartbeat",
+      "input": "{\"status\":\"ready\",\"capabilities\":{\"services\":[{\"serviceId\":\"geojson-rendering\",\"serviceVersion\":\"1.0.0\",\"contractHash\":\"urn:sha256:dAL7LqUGJyt53mKyPMXrf8OlooGKSdsPj2_sqodCUFs\"}],\"capacity\":{\"maxConcurrentOperations\":2,\"activeOperations\":0,\"reservedOperations\":0,\"availableOperationSlots\":2}}}",
+      "valid": true,
+      "canonicalHash": null
+    },
+    {
+      "name": "worker capability update body",
+      "contractType": "WorkerCapabilitiesUpdate",
+      "input": "{\"capabilities\":{\"services\":[{\"serviceId\":\"geojson-rendering\",\"serviceVersion\":\"1.0.0\",\"contractHash\":\"urn:sha256:dAL7LqUGJyt53mKyPMXrf8OlooGKSdsPj2_sqodCUFs\"}],\"capacity\":{\"maxConcurrentOperations\":2,\"activeOperations\":0,\"reservedOperations\":0,\"availableOperationSlots\":2}}}",
+      "valid": true,
+      "canonicalHash": null
+    },
+    {
+      "name": "worker resume body",
+      "contractType": "WorkerResume",
+      "input": "{}",
+      "valid": true,
+      "canonicalHash": null
+    },
+    {
+      "name": "lease update rejects malformed compact jws",
+      "contractType": "RevocationLeaseUpdate",
+      "input": "{\"revocationLeaseJws\":\"not-a-jws\"}",
+      "valid": false,
+      "canonicalHash": null
     }
   ],
   "jws": [
