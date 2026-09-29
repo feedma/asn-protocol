@@ -281,6 +281,25 @@ pub struct WorkerRevocationLease {
     pub expires_at: String,
 }
 
+/// Provider-signed command that revokes a single enrolled worker. It is an
+/// audit artifact, not a bearer-admin transport credential.
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RevokeWorker {
+    #[serde(rename = "type")]
+    pub command_type: String,
+    pub version: String,
+    pub worker_id: String,
+    pub provider_id: String,
+    pub revocation_id: String,
+    pub environment: String,
+    pub audience: String,
+    pub nonce: String,
+    pub issued_at: String,
+    pub expires_at: String,
+    pub reason: Option<String>,
+}
+
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum WorkerContractError {
     #[error("worker contract is invalid: {0}")]
@@ -903,6 +922,60 @@ impl WorkerRevocationLease {
             (Ok(issued_at), Ok(expires_at)) => now >= issued_at && now <= expires_at,
             _ => false,
         }
+    }
+}
+
+impl RevokeWorker {
+    pub fn validate(&self) -> Result<(), WorkerContractError> {
+        validate_type_version(&self.command_type, "RevokeWorker", &self.version)?;
+        validate_token(&self.worker_id, "invalid workerId")?;
+        validate_did(&self.provider_id, "invalid providerId")?;
+        validate_token(&self.revocation_id, "invalid revocationId")?;
+        validate_token(&self.environment, "invalid environment")?;
+        validate_audience(&self.audience)?;
+        validate_nonce(&self.nonce)?;
+        validate_window(
+            &self.issued_at,
+            &self.expires_at,
+            MAX_ENROLLMENT_CHALLENGE_SECONDS,
+            "worker revocation command",
+        )?;
+        if self
+            .reason
+            .as_ref()
+            .is_some_and(|reason| reason.len() > 512)
+        {
+            return Err(WorkerContractError::Invalid("invalid revocation reason"));
+        }
+        Ok(())
+    }
+
+    pub fn validate_for(
+        &self,
+        worker_id: &str,
+        provider_id: &str,
+        revocation_id: &str,
+        environment: &str,
+        audience: &str,
+        now: OffsetDateTime,
+    ) -> Result<(), WorkerContractError> {
+        self.validate()?;
+        if self.worker_id != worker_id
+            || self.provider_id != provider_id
+            || self.revocation_id != revocation_id
+            || self.environment != environment
+            || self.audience != audience
+        {
+            return Err(WorkerContractError::BindingMismatch("worker revocation"));
+        }
+        let issued_at = parse_timestamp(&self.issued_at, "worker revocation command")?;
+        let expires_at = parse_timestamp(&self.expires_at, "worker revocation command")?;
+        if issued_at > now || now > expires_at {
+            return Err(WorkerContractError::InvalidTimeWindow(
+                "worker revocation command outside validity window",
+            ));
+        }
+        Ok(())
     }
 }
 
